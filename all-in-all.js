@@ -115,7 +115,38 @@ function qSortA (arr, i, j) {
   obj.foo();// window.num + 666 =  726;
   obj.fn.call({ key: 'newKey' }) // key => obj.key => newKey 
   obj.foo.call({ key: 'newKey' }) // key => window.key => undefined,箭头函数的this不受call显示绑定影响  
-})()
+})();
+
+(() => {
+  /**
+  * @desc 继承之原型链继承与构造函数继承
+  * @author pika
+  */
+  function Parent (name) {
+    this.name = name
+  }
+  function Son (name, color) {
+    // call/apply调用父类构造函数实现继承
+    Parent.apply(this, arguments)
+    this.color = color
+  }
+  // 原型链继承之原型共享
+  Son.prototype = new Parent()
+  // 寄生组合继承，子类原型复用父类原型副本并将构造指向子类自身
+  Son.prototype = Object.create(Parent.prototype)
+  Son.prototype.constructor = Son
+
+  // exp
+  // 构造函数产生的对象属性访问的都是实例化新的构造函数之前该构造函数原型：
+  function Foo () { }
+  var foo = new Foo()
+  Foo.prototype.name = 'Foo'
+  foo.name // Foo => foo原型永远指向实例化构造函数Foo原型
+  Foo.prototype = { name: '' } // Foo原型被重写成Object但并未实例化成新对象
+  foo.name // Foo => 访问实例化之前的构造函数原型Foo而非Object
+  var fn = new Foo() // 实例化新的构造函数，生成对象fn原型指向被重写的原型Object
+  fn.name // '' => 访问新的原型Object
+})
 
 /**
 * @desc 函数防抖 在频繁触发条件下只取最后一次操作,用于搜索联想，频繁点赞等限制
@@ -273,7 +304,7 @@ function throttle (fn, delay) {
     '~': '按位取反',// 0为1,1为0
     '<< X': '进制有效位左移X位',
     '>> X': '进制有效位右移X位',
-    parseInt (Number, binary): ['字母', '数字']组合Number低进制位转高进制binary,
+    parseInt (Number, binary): ['字母', '数字']组合Number低进制位转高进制binary,binary为0默认以10进制转换,且Number参数不能大于等于binary, 否则返回NaN
     Number.toString(binary): 将十进制Number转binary进制数值
   }
   // 位运算运用场景之权限管理
@@ -285,5 +316,26 @@ function throttle (fn, delay) {
   判断user是否拥有某种权限可以使用 & 运算
   0011 & 1000 = 0000 // 为0代表user没有改(1000)的权限
   0011 & 0001 = 0001 // 权限0001代表user拥有增(0001)的权限
-})()
+})();
 
+(() => {
+  /**
+  * @desc 如何让Object对象也可以使用for of 遍历每个值
+  * @description 改写{}.Symbol.iterator方法
+  * @author pika
+  */
+  let obj = {
+    [Symbol.iterator]: () => {
+      let index = 0;
+      let keys = Object.keys(obj);
+      return {
+        next: () => {
+          return {
+            value: obj[keys[index++]],
+            done: index > keys.length
+          }
+        },
+      }
+    }
+  }
+})()
