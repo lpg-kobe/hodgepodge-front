@@ -1,4 +1,76 @@
 /**
+* @desc 冒泡排序（基础版）
+* @param {arr} 排序数组
+* @author pika
+*/
+function bubbleSort (arr) {
+  let len = arr.length
+  for (let i = 0; i < len; i++) {
+    for (let j = 0; j < len - i - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        let temp = arr[j]
+        arr[j] = arr[j + 1]
+        arr[j + 1] = temp
+      }
+    }
+  }
+  return arr
+}
+/**
+* @desc 冒泡排序（改进版1）,循环结束至最后一次交换位置
+* @param {arr} 排序数组
+* @author pika
+*/
+function bubbleSortA (arr) {
+  let sortIndex = arr.length - 1
+  while (sortIndex > 0) {
+    // 初始化对比时的索引
+    let pos = 0
+    for (let i = 0; i < sortIndex; i++) {
+      if (arr[i] > arr[i + 1]) {
+        // 记录交换时的索引
+        pos = i
+        let temp = arr[i]
+        arr[i] = arr[i + 1]
+        arr[i + 1] = temp
+      }
+    }
+    sortIndex = pos
+  }
+  return arr
+}
+
+/**
+* @desc 冒泡排序（改进版2）,左右冒泡
+* @param {arr} 排序数组
+* @author pika
+*/
+function bubbleSortB (arr) {
+  let min = 0, max = arr.length - 1, index, temp;
+  while (min < max) {
+    // 正向冒泡
+    for (index = min; index < max; index++) {
+      if (arr[index] > arr[index + 1]) {
+        temp = arr[index]
+        arr[index] = arr[index + 1]
+        arr[index + 1] = temp
+      }
+    }
+    max--
+    // 反向冒泡
+    for (index = max; index > min; index--) {
+      if (arr[index] < arr[index - 1]) {
+        temp = arr[index]
+        arr[index] = arr[index - 1]
+        arr[index - 1] = temp
+      }
+    }
+    min++
+  }
+  return arr
+}
+
+/**
 * @desc 快排 三行
 * @param {Array} arr 参与排序数组
 * @author pika
@@ -45,7 +117,7 @@ function qSortA (arr, i, j) {
 * @param {String} j 排序筛选位移，右边
 * @author pika
 */
-function qSortA (arr, i, j) {
+function qSortB (arr, i, j) {
   if (i < j) {
     var left = i;
     var right = j;
@@ -146,6 +218,90 @@ function qSortA (arr, i, j) {
   foo.name // Foo => 访问实例化之前的构造函数原型Foo而非Object
   var fn = new Foo() // 实例化新的构造函数，生成对象fn原型指向被重写的原型Object
   fn.name // '' => 访问新的原型Object
+
+  /**
+  * @desc new 操作符实现
+  * @author pika
+  */
+  function objectFactory (...args) {
+    // 截取构造函数并识别类型
+    let constructor = Array.prototype.shift.call(arguments)
+    if (typeof constructor !== 'function') {
+      console.error('type erro,fn is not a costructor')
+      return false
+    }
+    // 新建对象并将原型指向构造函数原型
+    let newObj = Object.create(constructor.prototype)
+    // 将this指向该新建的对象
+    let result = constructor.apply(newObj, arguments)
+    // 判断函数返回值类型，无返回值/返回基本类型值则返回该对象本身，返回值为引用类型则返回该引用类型=> exp:new Foo(){return ''||0} = Foo,new Foo(){return function fn(){}||{key:value}} = fn||{key:value}
+    let flag = result && (typeof result === "object" || typeof result === "function")
+    return flag ? result : newObj
+    // exp:操作运算符优先级 => 取值xxx.Fn|xxx[Fn] = new Fn()带参> new Fn不带参 = 函数调用
+  }
+
+  /**
+  * @desc 模拟call实现
+  * @param {Object} context 绑定的上下文对象
+  * @author pika
+  */
+  Function.prototype.mockCall = function (context) {
+    if (typeof this !== 'function') {
+      console.error('type error,fail to mockCall by not function')
+      return false
+    }
+    // 截取第一个参数后面的参数
+    const args = [...arguments].slice(1)
+    // 初始化上下文参数
+    context = context || window
+    // 将该函数this/Function.prototype作为上下文context的fn属性并执行fn，此时this将指向context上下文,exp:
+    // function bar(){console.log(this.name)}
+    // var obj = {name:'obj.name'}
+    // obj.fn = bar
+    // obj.fn => // obj.name = 'obj.name'
+    // 绑定完成后删除多余的fn属性
+    context.fn = this // this => Function.prototype
+    const result = context.fn(...args)
+    delete context.fn
+    return result
+  }
+  /**
+  * @desc 模拟apply实现
+  * @param {Object} context 绑定的上下文对象
+  * @author pika
+  */
+  Function.prototype.mockApply = function (context) {
+    if (typeof this !== 'function') {
+      console.error('type error,fail to mockApply by not function')
+      return false
+    }
+    // 初始化上下文参数
+    context = context || window
+    // 将函数设为对象context的方法fn
+    context.fn = this
+    // 根据第二个参数调用该对象的方法
+    const result = arguments[1] ? context.fn(...arguments[1]) : context.fn()
+    // 删除对象的fn函数引用
+    delete context.fn
+    return result
+  }
+  /**
+   * @desc 模拟bind实现
+   * @param {Object} context 绑定的上下文对象
+   * @author pika
+   */
+  Function.prototype.mockBind = function (context) {
+    if (typeof this !== 'function') {
+      console.error('type error,fail to mockBind by not function')
+      return false
+    }
+    // 截取传入的参数
+    const args = [...arguments].slice(1)
+    // 返回函数引用并根据调用方式传入不同值
+    return function Fn () {
+      return this.apply(this instanceof Fn ? this : context, [...args, ...arguments])
+    }
+  }
 })
 
 /**
@@ -304,9 +460,16 @@ function throttle (fn, delay) {
     '~': '按位取反',// 0为1,1为0
     '<< X': '进制有效位左移X位',
     '>> X': '进制有效位右移X位',
-    parseInt (Number, binary): ['字母', '数字']组合Number低进制位转高进制binary,binary为0默认以10进制转换,且Number参数不能大于等于binary, 否则返回NaN
+    parseInt (Number, binary): ['字母', '数字']组合Number低进制位转高进制binary, binary为0默认以10进制转换, 且Number参数不能大于等于binary, 否则返回NaN
     Number.toString(binary): 将十进制Number转binary进制数值
-  }
+    // 原码、反码与补码
+    原码: // 正数原码  [+3] => 0000 0011
+      // 负数原码符号位为1 [-3] => 1000 0011
+      反码: // 正数反码同原码
+    // 负数反码符号位为1,数值部分原码取反 [-3] => 1111 1100
+    补码: // 正数补码同原码
+         // 负数补码为反码加1 [-3] => 1111 1101
+}
   // 位运算运用场景之权限管理
   exp: 假定管理系统拥有增(0001) 、删(0010) 、查(0100) 、改(1000)四个权限
   给user添加某种权限可以使用 | 运算
@@ -337,5 +500,72 @@ function throttle (fn, delay) {
         },
       }
     }
+  }
+})();
+
+(() => {
+  /**
+  * @desc Promise模拟实现
+  * @param {Function} fn 上下文执行栈
+  * @author pika
+  */
+  function myPromise (fn) {
+    this.status = 'pending'
+    this.value = null
+    this.resolveCallbacks = []
+    this.rejectCallbacks = []
+    resolve = value => {
+      // 若传入promise对象则等待并callback，=>myPromise.then(()=>{new myPromise})
+      if (value instanceof myPromise) {
+        return value.then(resolve, reject)
+      }
+      // 确保宏任务回调
+      setTimeout(() => {
+        if (this.status === 'pending') {
+          this.status = 'resolve'
+          this.value = value
+          this.resolveCallbacks.forEach(cb => {
+            cb(value)
+          });
+        }
+      }, 0)
+    }
+    reject = value => {
+      // 确保宏任务回调
+      setTimeout(() => {
+        if (this.status === 'pending') {
+          this.status = 'reject'
+          this.value = value
+          this.rejectCallbacks.forEach(cb => {
+            cb(value)
+          });
+        }
+      }, 0)
+    }
+    try {
+      fn(resolve, reject)
+    } catch (error) {
+      reject(error)
+    }
+  }
+  myPromise.prototype.then = function (res, rej) {
+    res = typeof res === "function" ? res : value => value;
+    rej = typeof rej === "function" ? rej : error => {
+      throw error;
+    };
+    if (this.state === 'pending') {
+      this.resolveCallbacks.push(res);
+      this.rejectCallbacks.push(rej);
+    };
+    // 状态回调
+    let cbFn = {
+      'resolve': () => {
+        res(this.value)
+      },
+      'rej': () => {
+        rej(this.value)
+      },
+    }
+    cbFn[this.status] && cbFn[this.status]()
   }
 })()
