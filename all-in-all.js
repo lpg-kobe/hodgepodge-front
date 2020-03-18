@@ -19,6 +19,7 @@ function bubbleSort (arr) {
 /**
 * @desc 冒泡排序（改进版1）,循环结束至最后一次交换位置
 * @param {arr} 排序数组
+* @from [https://github.com/damonare/Sorts]
 * @author pika
 */
 function bubbleSortA (arr) {
@@ -71,11 +72,108 @@ function bubbleSortB (arr) {
 }
 
 /**
+* @desc 选择排序（任何情况下时间复杂度都为O(n2)）
+* @param {Array} arr 排序数组
+* @author pika
+*/
+function selectSort (arr) {
+  let len = arr.length
+  let minIndex = 0
+  for (let i = 0; i < len - 1; i++) {
+    minIndex = i
+    for (let j = i + 1; j < len; j++) {
+      if (arr[j] < arr[minIndex]) {
+        minIndex = j
+      }
+    }
+    let temp = arr[i]
+    arr[i] = arr[minIndex]
+    arr[minIndex] = temp
+  }
+  return arr
+}
+
+/**
+* @desc 插入排序，类似抓牌依次将当前牌跟之前的作对比，往右位移大牌
+* @param {Array} arr 要排序的数组
+* @author pika
+*/
+function insertSort (arr) {
+  for (let i = 1, len = arr.length; i < len; i++) {
+    let current = arr[i]
+    let j = i
+    // 将当前牌跟之前的牌依次比对大小
+    while (j - 1 >= 0 && arr[j - 1] > current) {
+      // 将每个牌的位置往后挪
+      arr[j] = arr[j - 1]
+      j--
+    }
+    // 插入当前牌
+    arr[j] = current
+  }
+  return arr
+}
+
+/**
+* @desc 归并排序，将左右分治经典运用
+* @param {Array} arr 要排序的数组
+* @author pika
+*/
+function mergeSort (arr) {
+  let len = arr.length;
+  if (len <= 1) {
+    return arr;
+  }
+  let middle = Math.floor(len / 2)
+  let left = arr.slice(0, middle)
+  let right = arr.slice(middle)
+  return merge(mergeSort(left), mergeSort(right))
+  function merge (left, right) {
+    let result = []
+    while (left.length && right.length) {
+      if (left[0] < right[0]) {
+        result.push(left.shift())
+      } else {
+        result.push(right.shift())
+      }
+    }
+    while (left.length) {
+      result.push(left.shift())
+    }
+    while (right.length) {
+      result.push(right.shift())
+    }
+    return result
+  }
+}
+
+/**
 * @desc 快排 三行
 * @param {Array} arr 参与排序数组
 * @author pika
 */
 const qSort = arr => arr.length <= 1 ? arr : qSort(arr.filter(el => el < arr[0])).concat(arr.filter(el => el === arr[0]), qSort(arr.filter(el => el > arr[0])))
+
+/**
+* @desc 快排（经典思维）,左右推入
+* @param {Array} arr 参与排序数组
+* @author pika
+*/
+function quickSort (arr) {
+  if (arr.length <= 1) { return arr }
+  let left = []
+  let right = []
+  let pivotIndex = Math.floor(arr.length / 2)
+  let pivot = arr.splice(pivotIndex, 1)[0]
+  for (let i = 0, len = arr.length; i < len; i++) {
+    if (arr[i] > pivot) {
+      right.push(arr[i])
+    } else {
+      left.push(arr[i])
+    }
+  }
+  return quickSort(left).concat([pivot], quickSort(right))
+}
 
 /**
 * @desc 快排常规，基数取数组第一个数，时间复杂度最高
@@ -146,6 +244,78 @@ function qSortB (arr, i, j) {
     qSortA(arr, i + 1, right);
     return arr;
   }
+}
+
+/**
+* @desc 经典爬楼梯，步长为1/2
+* @param {Number} n 楼梯阶级 
+* @description F(1)=>step(0-1) //1
+               F(2)=>step(0-1-2)|step(0-2) //2
+               F(3)=>step(0-1-2-3)|step(0-1-3)|step(0-2-3) //3
+               F(4)=>step(0-1-2-3-4)|step(0-1-2-4)|step(0-1-3-4)|step(0-2-3-4)|step(0-2-4) //5
+               由此推导F(n)=>F(n-1)+F(n-2),边界条件为n=1|n=2|n<1
+* @author pika
+*/
+function climb (n) {
+  if (n < 1) {
+    return 0
+  }
+  if (n === 1) {
+    return 1
+  }
+  if (n === 2) {
+    return 2
+  }
+  return climb(n - 1) + climb(n - 2)
+}
+/**
+* @desc 改进版爬楼梯1，将递归重复出现的F(XX)保存起来并直接取值
+* @param {Number} n 楼梯阶级
+* @author pika
+*/
+let map = new Map()
+function climbMap (n) {
+  if (n < 1) {
+    return 0
+  }
+  if (n < 1) {
+    return 1
+  }
+  if (n < 2) {
+    return 2
+  }
+  if (map.has(n)) {
+    return map.get(n)
+  } else {
+    let value = climb(n - 1) + climb(n - 2)
+    map.set(n, value)
+    return value
+  }
+}
+/**
+* @desc 改进版爬楼梯end，最终值只依赖前面两个的值，可以从第三个位置开始后每次迭代都将最终值与前面两个值交换,参考https://mp.weixin.qq.com/s?__biz=MzI1MTIzMzI2MA==&mid=2650561168&idx=1&sn=9d1c6f7ba6d651c75399c4aa5254a7d8&chksm=f1feec13c6896505f7886d9455278ad39749d377a63908c59c1fdceb11241e577ff6d66931e4&scene=21#wechat_redirect
+* @param {Number} n 楼梯阶级
+* @author pika
+*/
+function climbSwap (n) {
+  if (n < 1) {
+    return 0
+  }
+  if (n < 1) {
+    return 1
+  }
+  if (n < 2) {
+    return 2
+  }
+  let a = 1
+  let b = 2
+  let temp = 0
+  for (let i = 3; i <= n; i++) {
+    temp = a + b
+    a = b
+    b = temp
+  }
+  return temp
 }
 
 (() => {
