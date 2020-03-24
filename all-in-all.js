@@ -17,7 +17,7 @@ function bubbleSort (arr) {
   return arr
 }
 /**
-* @desc 冒泡排序（改进版1）,循环结束至最后一次交换位置
+* @desc 冒泡排序（改进版1）,以每轮比较大小的结束位置为终点循环列表
 * @param {arr} 排序数组
 * @from [https://github.com/damonare/Sorts]
 * @author pika
@@ -318,6 +318,78 @@ function climbSwap (n) {
   return temp
 }
 
+/**
+* @desc 两个大整数相加
+* @param {num1} 大整数1
+* @param {num2} 大整数2
+* @author pika
+*/
+function numberAdd (num1, num2) {
+  let parse = false
+  let result = ''
+  num1 = String(num1).split('')
+  num2 = String(num2).split('')
+  while (num1.length || num2.length || parse) {
+    parse += ~~num1.pop() + ~~num2.pop()
+    // 只叠加结果的个位数
+    result = parse % 10 + result
+    // 将十位数转为Boolean的parse叠加
+    parse = parse > 9
+  }
+  return result
+}
+
+/**
+* @desc 模拟Array.prototype.flat扁平化数组
+* @param {arr} Array
+* @author pika
+*/
+function flatArr (arr) {
+  return arr.reduce((prev, next) => {
+    return prev.concat(Array.isArray(next) ? flatArr(next) : next)
+  }, [])
+}
+
+/**
+* @desc 最大公约数，采用辗转相除法，大/小/余数
+* @param {Number} a,b
+* @author pika
+*/
+function maxCommonDivise (a, b) {
+  if (b === 0) { return a }
+  return maxCommonDivise(b, a % b)
+}
+
+/**
+* @desc 最小公倍数，两数乘积/最大公约数
+* @param {Number} a,b
+* @author pika
+*/
+function minCommonMultiple (a, b) {
+  return a * b / maxCommonDivise(a, b)
+}
+
+/**
+* @desc 找出英文文章出现评率最高的单词
+* @param {text} 文章内容
+* @author pika
+*/
+function findMostWord (text) {
+  let maxCount = 0
+  let maxWord = ''
+  text = text.trim().toLowerCase()
+  textList = text.match(/[a-z]+/g)
+  for (let word of textList) {
+    let reg = new RegExp(word, "g")
+    let cur = text.match(reg)
+    if (cur && cur.length > maxCount) {
+      maxCount = cur.length
+      maxWord = word
+    }
+  }
+  return { maxCount, maxWord }
+}
+
 (() => {
   // this作用域解析 exp
   // this绑定权重优先级:{
@@ -368,11 +440,11 @@ function climbSwap (n) {
     this.name = name
   }
   function Son (name, color) {
-    // call/apply调用父类构造函数实现继承
-    Parent.apply(this, arguments)
+    // call/apply调用父类构造函数实现属性继承
+    Parent.apply(this, arguments) | Parent.call(this, name, color)
     this.color = color
   }
-  // 原型链继承之原型共享
+  // 原型链继承之原型共享，实现方法继承
   Son.prototype = new Parent()
   // 寄生组合继承，子类原型复用父类原型副本并将构造指向子类自身
   Son.prototype = Object.create(Parent.prototype)
@@ -586,7 +658,8 @@ function throttle (fn, delay) {
     for (var id in keyObj) {
       if (keyObj[id].pId) {
         keyObj[keyObj[id].pId].children = {
-          [keyObj[id].id]: keyObj[id]
+          ...(keyObj[keyObj[id].pId].children || {}),
+          [id]: keyObj[id]
         }
       } else {
         tree[id] = keyObj[id];
@@ -611,8 +684,6 @@ function throttle (fn, delay) {
     }
     return list
   }
-  // console.log(toTree(menu_list))
-  console.log(treeLoop(menu_list, 0))
 })();
 
 (() => {
@@ -723,7 +794,7 @@ function throttle (fn, delay) {
     rej = typeof rej === "function" ? rej : error => {
       throw error;
     };
-    if (this.state === 'pending') {
+    if (this.status === 'pending') {
       this.resolveCallbacks.push(res);
       this.rejectCallbacks.push(rej);
     };
