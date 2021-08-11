@@ -432,6 +432,29 @@ function findMostWord (text) {
 })();
 
 (() => {
+  // 设计模式（工厂）
+  function Feactory (name) {
+    var o = Object.create(null) 
+    o.name = name
+    return o
+  }
+  // 设计模式（构造函数）
+  function Constructor (name) {
+    this.name = name
+  }
+  // 设计模式（单例）
+  fucntion CreateSingle (constructor) {
+    var instance;
+    return function () {
+      if (!instance) {
+        instance = new constructor(...arguments)
+      }
+      return instance
+    }
+  }
+})()
+
+(() => {
   /**
   * @desc 继承之原型链继承与构造函数继承
   * @author pika
